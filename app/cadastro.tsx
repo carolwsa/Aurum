@@ -5,7 +5,7 @@ import { Button } from "../src/components/button";
 import { Input } from "../src/components/input";
 import { Texto } from "../src/components/text";
 
-export default function Login() {
+export default function Cadastro() {
   return (
     <View style={styles.wrapper}>
       <LinearGradient
@@ -14,14 +14,16 @@ export default function Login() {
       >
         <View style={styles.container}>
           <View style={styles.container_inputs}>
-            <Texto id={"1"} textContent="Login" />
+            <Texto id={"1"} textContent="Cadastro" />
+            <Input placeholder="Nome" />
             <Input placeholder="E-mail" />
             <Input placeholder="Senha" secureTextEntry={true} />
+            <Input placeholder="Confime a senha" secureTextEntry={true} />
           </View>
 
-          <Button label={"Entrar"} />
+          <Button label={"Cadastrar"} />
           <View style={styles.container_buttons}>
-            <Texto id={"2"} textContent="Não possui conta?" />
+            <Texto id={"2"} textContent="Já possui conta?" />
             <Text
               style={{
                 fontSize: 16,
@@ -30,8 +32,7 @@ export default function Login() {
                 fontWeight: "bold",
               }}
             >
-              {/* @ts-ignore */}
-              <Link href="/cadastro">Cadastre-se</Link>
+              <Link href="/">Login</Link>
             </Text>
           </View>
         </View>
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
   gradientBorder: {
     padding: 3,
     borderRadius: 10,
-    height: "70%",
+    height: "85%",
     width: "90%",
   },
   container: {

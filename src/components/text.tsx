@@ -25,7 +25,7 @@ export const Texto = ({ id, textContent }: TextoProps) => {
 
 const styles = StyleSheet.create({
   titulo: {
-    fontSize: 30,
+    fontSize: 40,
     fontWeight: "bold",
     fontFamily: "Montserrat",
     textAlign: "center",
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   legenda: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "Montserrat",
     textAlign: "left",
     marginTop: 20,
