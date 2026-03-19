@@ -1,11 +1,37 @@
+import { useAuth } from "@/src/context/auth";
+import { login } from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { Button } from "../src/components/button";
 import { Input } from "../src/components/input";
 import { Texto } from "../src/components/text";
 
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { isLoggedIn, user } = useAuth();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Erro", "Preencha todos os campos.");
+      return;
+    }
+
+    setLoading(true);
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      Alert.alert("Sucesso", result.message);
+      // Navegue para a tela principal (ex.: router.push('/dashboard'))
+    } else {
+      Alert.alert("Erro", result.message);
+    }
+  };
+
   return (
     <View style={styles.wrapper}>
       <LinearGradient
@@ -15,11 +41,16 @@ export default function Login() {
         <View style={styles.container}>
           <View style={styles.container_inputs}>
             <Texto id={"1"} textContent="Login" />
-            <Input placeholder="E-mail" />
-            <Input placeholder="Senha" secureTextEntry={true} />
+            <Input placeholder="E-mail" value={email} onChangeText={setEmail} />
+            <Input
+              placeholder="Senha"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={true}
+            />
           </View>
 
-          <Button label={"Entrar"} />
+          <Button label={"Entrar"} onPress={handleLogin} disabled={loading} />
           <View style={styles.container_buttons}>
             <Texto id={"2"} textContent="Não possui conta?" />
             <Text
