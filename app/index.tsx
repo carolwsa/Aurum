@@ -1,5 +1,4 @@
 import { useAuth } from "@/src/context/auth";
-import { login } from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { useState } from "react";
@@ -20,16 +19,18 @@ export default function Login() {
       return;
     }
 
-    setLoading(true);
-    const result = await login(email, password);
-    setLoading(false);
+    console.log("Login solicitado com:", { email, password });
 
-    if (result.success) {
-      Alert.alert("Sucesso", result.message);
-      // Navegue para a tela principal (ex.: router.push('/dashboard'))
-    } else {
-      Alert.alert("Erro", result.message);
-    }
+    // setLoading(true);
+    // const result = await login(email, password);
+    // setLoading(false);
+
+    // if (result.success) {
+    //   Alert.alert("Sucesso", result.message);
+    //   // Navegue para a tela principal (ex.: router.push('/dashboard'))
+    // } else {
+    //   Alert.alert("Erro", result.message);
+    // }
   };
 
   return (
