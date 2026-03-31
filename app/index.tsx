@@ -1,6 +1,6 @@
 import { useAuth } from "@/src/context/auth";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { Button } from "../src/components/button";
@@ -12,6 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { isLoggedIn, user } = useAuth();
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -31,6 +32,8 @@ export default function Login() {
     // } else {
     //   Alert.alert("Erro", result.message);
     // }
+
+    router.push("/home");
   };
 
   return (

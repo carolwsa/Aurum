@@ -40,11 +40,11 @@ const styles = StyleSheet.create({
     color: "#3a3a3a",
   },
   subtitulo: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     fontFamily: "Montserrat",
     textAlign: "center",
-    color: "#ffff",
+    color: "#3a3a3a",
   },
   Tbody: {},
 });
