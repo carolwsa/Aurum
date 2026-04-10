@@ -257,8 +257,3 @@ const styles = StyleSheet.create({
     color: "#FF8A00",
   },
 });
-
-// criar um card de valor gasto no mês
-// criar um gráfico?
-// criar um card de ultimos gastos
-// criar botão de nova despesa

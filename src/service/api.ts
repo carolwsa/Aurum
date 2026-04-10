@@ -128,7 +128,6 @@ export const getDailyExpenses = async () => {
 
 // Exemplo: Obter últimos 5 gastos do usuário
 export const getRecentExpenses = async () => {
-  // MOCK enquanto backend não está conectado
   const mockData = [
     {
       id: "1",
@@ -174,4 +173,38 @@ export const getRecentExpenses = async () => {
   //     message: "Erro ao buscar gastos recentes.",
   //   };
   // }
+};
+
+export const getExpensesByMonth = async (month: string) => {
+  const mockData = [
+    {
+      id: 1,
+      description: "Lanche do IF",
+      amount: 12.5,
+      date: "2026-04-09",
+    },
+    {
+      id: 2,
+      description: "Gasolina",
+      amount: 250,
+      date: "2026-04-09",
+    },
+    {
+      id: 3,
+      description: "Compras farmácia",
+      amount: 98.72,
+      date: "2026-04-09",
+    },
+    {
+      id: 4,
+      description: "Almoço",
+      amount: 45,
+      date: "2026-04-10",
+    },
+  ];
+
+  return {
+    success: true,
+    data: mockData,
+  };
 };
