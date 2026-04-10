@@ -93,7 +93,6 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    fontFamily: "Montserrat",
     color: "#333",
   },
   closeButton: {
@@ -112,8 +111,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f0f0f0",
   },
   menuItemText: {
-    fontSize: 16,
-    fontFamily: "Montserrat",
+    fontSize: 18,
     color: "#333",
     fontWeight: "500",
   },

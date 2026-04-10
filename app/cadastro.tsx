@@ -80,7 +80,6 @@ export default function Cadastro() {
             <Text
               style={{
                 fontSize: 16,
-                fontFamily: "Montserrat",
                 marginTop: 20,
                 fontWeight: "bold",
               }}

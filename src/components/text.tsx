@@ -27,22 +27,20 @@ const styles = StyleSheet.create({
   titulo: {
     fontSize: 40,
     fontWeight: "bold",
-    fontFamily: "Montserrat",
     textAlign: "center",
     marginBottom: 50,
     marginTop: 20,
   },
   legenda: {
-    fontSize: 16,
-    fontFamily: "Montserrat",
+    fontSize: 18,
+
     textAlign: "left",
     marginTop: 20,
     color: "#3a3a3a",
   },
   subtitulo: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
-    fontFamily: "Montserrat",
     textAlign: "center",
     color: "#3a3a3a",
   },

@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Texto } from "./text";
 
 export const Header = ({
@@ -19,7 +19,7 @@ export const Header = ({
       </View>
       <View>
         <Pressable onPress={onMenuPress} style={style.hamburger}>
-          <Texto id="3" textContent="☰" />
+          <Text style={style.hamburger}>☰</Text>
         </Pressable>
       </View>
     </View>
@@ -28,8 +28,8 @@ export const Header = ({
 
 const style = StyleSheet.create({
   image: {
-    width: 50,
-    height: 50,
+    width: 60,
+    height: 60,
   },
   txtContainer: {
     display: "flex",
@@ -40,6 +40,7 @@ const style = StyleSheet.create({
   },
   hamburger: {
     padding: 5,
+    fontSize: 26,
   },
 
   mainContainer: {
@@ -49,8 +50,8 @@ const style = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffffffed",
     padding: 20,
-    marginTop: 30,
-    height: 60,
+    paddingTop: 0,
+    height: 90,
     gap: 15,
   },
 });

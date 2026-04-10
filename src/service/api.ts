@@ -106,3 +106,72 @@ export const isAuthenticated = async (): Promise<boolean> => {
   const token = await getAuthToken();
   return !!token; // Retorna true se houver token
 };
+
+// Exemplo: Obter gastos diários dos últimos 5 dias
+export const getDailyExpenses = async () => {
+  const mockData = [
+    { date: "2026-04-06", amount: 200 },
+    { date: "2026-04-07", amount: 150 },
+    { date: "2026-04-08", amount: 300 },
+    { date: "2026-04-09", amount: 250 },
+    { date: "2026-04-10", amount: 100 },
+  ];
+  return { success: true, data: mockData };
+
+  // try {
+  //   const response = await api.get("/expenses/daily"); // Rota para obter gastos diários
+  //   return { success: true, data: response.data }; // Supondo que retorne array de {date: 'YYYY-MM-DD', amount: number}
+  // } catch (error: any) {
+  //   return { success: false, message: "Erro ao obter gastos diários." };
+  // }
+};
+
+// Exemplo: Obter últimos 5 gastos do usuário
+export const getRecentExpenses = async () => {
+  // MOCK enquanto backend não está conectado
+  const mockData = [
+    {
+      id: "1",
+      description: "Supermercado",
+      amount: 180.5,
+      date: "2026-04-10",
+    },
+    {
+      id: "2",
+      description: "Combustível",
+      amount: 120,
+      date: "2026-04-09",
+    },
+    {
+      id: "3",
+      description: "Restaurante",
+      amount: 75.9,
+      date: "2026-04-08",
+    },
+    {
+      id: "4",
+      description: "Farmácia",
+      amount: 45.3,
+      date: "2026-04-07",
+    },
+    {
+      id: "5",
+      description: "Internet",
+      amount: 99.9,
+      date: "2026-04-06",
+    },
+  ];
+
+  return { success: true, data: mockData };
+
+  // IMPLEMENTAÇÃO REAL FUTURA
+  // try {
+  //   const response = await api.get("/expenses/recent?limit=5");
+  //   return { success: true, data: response.data };
+  // } catch (error: any) {
+  //   return {
+  //     success: false,
+  //     message: "Erro ao buscar gastos recentes.",
+  //   };
+  // }
+};

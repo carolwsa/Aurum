@@ -60,7 +60,6 @@ export default function Login() {
             <Text
               style={{
                 fontSize: 16,
-                fontFamily: "Montserrat",
                 marginTop: 20,
                 fontWeight: "bold",
               }}

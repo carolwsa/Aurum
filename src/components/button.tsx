@@ -1,9 +1,9 @@
 import {
   StyleSheet,
+  Text,
   TouchableOpacity,
   TouchableOpacityProps,
 } from "react-native";
-import { Texto } from "./text";
 
 type ButtonProps = TouchableOpacityProps & {
   label: string;
@@ -12,7 +12,7 @@ type ButtonProps = TouchableOpacityProps & {
 export const Button = ({ label, ...rest }: ButtonProps) => {
   return (
     <TouchableOpacity style={styles.container} activeOpacity={0.6} {...rest}>
-      <Texto id={"3"} textContent={label} />
+      <Text style={styles.text}>{label}</Text>
     </TouchableOpacity>
   );
 };
@@ -26,5 +26,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 50,
     marginTop: 30,
+  },
+  text: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
