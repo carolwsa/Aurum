@@ -208,3 +208,20 @@ export const getExpensesByMonth = async (month: string) => {
     data: mockData,
   };
 };
+
+export const createExpense = async (data: any) => {
+  try {
+    const response = await api.post("/expenses", data);
+
+    return {
+      success: true,
+      data: response.data,
+      message: "Despesa cadastrada com sucesso!",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.message || "Erro ao cadastrar despesa.",
+    };
+  }
+};

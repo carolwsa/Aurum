@@ -1,10 +1,10 @@
 import { StyleSheet, TextInput, TextInputProps } from "react-native";
 
-export const Input = ({ ...rest }: TextInputProps) => {
+export const Input = ({ style, ...rest }: TextInputProps) => {
   //O "...rest" é para passar todas as props do TextInput para o componente Input, sem precisar especificar cada uma delas.
   //Assim, o componente Input pode ser usado de forma flexível,
   //permitindo que o usuário passe qualquer prop que seja válida para um TextInput.
-  return <TextInput style={styles.input} {...rest}></TextInput>;
+  return <TextInput style={[styles.input, style]} {...rest}></TextInput>;
 };
 
 const styles = StyleSheet.create({

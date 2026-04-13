@@ -153,7 +153,7 @@ export default function Despesas() {
               animationType="fade"
               onRequestClose={() => setVisible(false)}
             >
-              <View style={{ flex: 1, padding: 20 }}>
+              <View style={styles.overlay}>
                 <CadastroDespesa />
               </View>
 
@@ -279,13 +279,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-  },
-  modal: {
-    width: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 8,
     padding: 20,
   },
-
   closeButton: {},
 });
