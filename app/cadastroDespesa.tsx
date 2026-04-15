@@ -13,16 +13,11 @@ import {
   View,
 } from "react-native";
 
-interface CreateExpensePayload {
-  description: string;
-  amount: number;
-  category: string;
-  type: "despesa" | "meta" | string;
-  date: string;
-  recurring: boolean;
+interface CadastroDespesaProps {
+  onClose: () => void;
 }
 
-export const CadastroDespesa = () => {
+export const CadastroDespesa = ({ onClose }: CadastroDespesaProps) => {
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [categoria, setCategoria] = useState("alimentacao");
@@ -32,7 +27,7 @@ export const CadastroDespesa = () => {
   const [recorrente, setRecorrente] = useState(false);
 
   function onChange(_: any, selectedDate?: Date) {
-    setShow(false);
+    setShow(Platform.OS === "ios");
     if (selectedDate) setDate(selectedDate);
   }
 
@@ -41,59 +36,124 @@ export const CadastroDespesa = () => {
       alert("Preencha todos os campos obrigatórios");
       return;
     }
+    const mesesNomes = [
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro",
+    ];
+    const mesDaDespesa = mesesNomes[date.getMonth()];
 
-    const payload: CreateExpensePayload = {
+    const payload = {
       description: descricao,
       amount: Number(valor),
       category: categoria,
       type: tipo,
       date: date.toISOString(),
+      monthName: mesDaDespesa,
       recurring: recorrente,
     };
 
     const response = await createExpense(payload);
 
     if (response.success) {
-      alert(response.message);
+      alert("Sucesso!");
+      if (tipo === "meta") {
+        console.log(`Automação: Mês de ${mesDaDespesa} marcado como pago.`);
+      }
 
-      setDescricao("");
-      setValor("");
-      setDate(null);
-      setRecorrente(false);
+      onClose();
     } else {
       alert(response.message);
     }
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.modal}>
-        <Text style={styles.title}>Cadastrar Despesa</Text>
+    <View style={styles.modalCard}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Nova Despesa</Text>
+        <TouchableOpacity onPress={onClose} style={styles.closeIconContainer}>
+          <Text style={styles.closeIcon}>✕</Text>
+        </TouchableOpacity>
+      </View>
 
-        <Input
-          style={styles.despesa}
-          placeholder="Descrição"
-          value={descricao}
-          onChangeText={setDescricao}
-        />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Descrição</Text>
+          <Input
+            style={styles.input}
+            placeholder="Ex: Aluguel, Supermercado..."
+            value={descricao}
+            onChangeText={setDescricao}
+          />
+        </View>
 
-        <Input
-          style={styles.despesa}
-          placeholder="Valor"
-          value={valor}
-          onChangeText={setValor}
-          keyboardType="numeric"
-        />
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Valor</Text>
+          <Input
+            style={styles.input}
+            placeholder="R$ 0,00"
+            value={valor}
+            onChangeText={setValor}
+            keyboardType="numeric"
+          />
+        </View>
 
-        <View style={styles.field}>
+        <View style={styles.row}>
+          <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
+            <Text style={styles.label}>Data</Text>
+            <TouchableOpacity
+              onPress={() => setShow(true)}
+              style={styles.selectorButton}
+            >
+              <Text style={styles.selectorText}>
+                {date ? date.toLocaleDateString("pt-BR") : "Selecionar"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.label}>Tipo</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={tipo}
+                onValueChange={setTipo}
+                style={styles.picker}
+                dropdownIconColor="#4B5563"
+              >
+                <Picker.Item
+                  label="Despesa"
+                  value="despesa"
+                  style={styles.pickerItem}
+                />
+                <Picker.Item
+                  label="Meta"
+                  value="meta"
+                  style={styles.pickerItem}
+                />
+              </Picker>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
           <Text style={styles.label}>Categoria</Text>
-
-          <View>
+          <View style={styles.pickerWrapper}>
             <Picker
               selectedValue={categoria}
               onValueChange={setCategoria}
               style={styles.picker}
-              dropdownIconColor="#666"
             >
               <Picker.Item
                 label="Alimentação"
@@ -116,71 +176,8 @@ export const CadastroDespesa = () => {
                 style={styles.pickerItem}
               />
               <Picker.Item
-                label="Educação"
-                value="educacao"
-                style={styles.pickerItem}
-              />
-              <Picker.Item
-                label="Comunicação"
-                value="comunicacao"
-                style={styles.pickerItem}
-              />
-              <Picker.Item
-                label="Streaming"
-                value="streaming"
-                style={styles.pickerItem}
-              />
-              <Picker.Item
                 label="Lazer"
                 value="lazer"
-                style={styles.pickerItem}
-              />
-              <Picker.Item
-                label="Outros"
-                value="outros"
-                style={styles.pickerItem}
-              />
-            </Picker>
-          </View>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Data</Text>
-          <TouchableOpacity
-            onPress={() => setShow(true)}
-            style={styles.dateButton}
-          >
-            <Text style={styles.dateText}>
-              {date ? date.toLocaleDateString("pt-BR") : "Selecionar data"}
-            </Text>
-          </TouchableOpacity>
-
-          {show && (
-            <DateTimePicker
-              value={date || new Date()}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
-              onChange={onChange}
-            />
-          )}
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Tipo</Text>
-          <View>
-            <Picker
-              selectedValue={tipo}
-              onValueChange={setTipo}
-              style={styles.picker}
-            >
-              <Picker.Item
-                label="Despesa"
-                value="despesa"
-                style={styles.pickerItem}
-              />
-              <Picker.Item
-                label="Meta"
-                value="meta"
                 style={styles.pickerItem}
               />
             </Picker>
@@ -188,142 +185,165 @@ export const CadastroDespesa = () => {
         </View>
 
         <TouchableOpacity
+          activeOpacity={0.7}
           onPress={() => setRecorrente(!recorrente)}
-          style={styles.checkboxContainer}
+          style={styles.checkboxRow}
         >
           <View style={[styles.checkbox, recorrente && styles.checkboxChecked]}>
-            {recorrente && <Text style={styles.check}>✓</Text>}
+            {recorrente && <Text style={styles.checkMark}>✓</Text>}
           </View>
-          <Text style={styles.checkboxLabel}>Despesa recorrente</Text>
+          <Text style={styles.checkboxLabel}>
+            Esta despesa se repete todo mês
+          </Text>
         </TouchableOpacity>
 
-        <View style={styles.buttonContainer}>
-          <Button label="Salvar" onPress={handleSalvar} />
-        </View>
+        {show && (
+          <DateTimePicker
+            value={date || new Date()}
+            mode="date"
+            display={Platform.OS === "ios" ? "inline" : "default"}
+            onChange={onChange}
+          />
+        )}
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <Button label="Salvar Despesa" onPress={handleSalvar} />
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: "center",
-    padding: 16,
-  },
-
-  modal: {
-    width: "100%",
-    maxWidth: 420,
-    alignSelf: "center",
+  modalCard: {
+    width: "95%",
+    maxWidth: 400,
+    maxHeight: "85%",
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    gap: 10,
+    borderRadius: 24,
+    overflow: "hidden",
+    elevation: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
   },
-
+  header: {
+    padding: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
+    color: "#111827",
+  },
+  closeIconContainer: {
+    padding: 4,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 20,
+  },
+  closeIcon: {
+    fontSize: 16,
+    color: "#6B7280",
+    fontWeight: "bold",
+    width: 20,
     textAlign: "center",
-    marginBottom: 12,
-    color: "#000000",
   },
-
-  field: {
-    gap: 7,
+  scrollContent: {
+    padding: 20,
+    gap: 16,
   },
-
+  inputGroup: {
+    marginBottom: 4,
+  },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
-    color: "#000000",
+    color: "#4B5563",
+    marginBottom: 6,
+    marginLeft: 4,
   },
-
+  input: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 50,
+    fontSize: 14,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  selectorButton: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    height: 48,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  selectorText: {
+    fontSize: 14,
+    color: "#1F2937",
+  },
+  pickerWrapper: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
   picker: {
-    height: 44,
+    height: 48,
+    width: "100%",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    backgroundColor: "#FFF",
-    justifyContent: "center",
+    borderColor: "#E5E7EB",
   },
-
-  pickerItem: {
-    fontSize: 14,
-    color: "#000000",
-  },
-
-  dateButton: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFF",
-    justifyContent: "center",
-  },
-
-  dateText: {
-    fontSize: 14,
-    color: "#000000",
-  },
-
-  checkboxContainer: {
+  checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 8,
+    paddingVertical: 4,
   },
-
   checkbox: {
     width: 22,
     height: 22,
     borderWidth: 2,
-    borderColor: "#8e8f8f",
+    borderColor: "#D1D5DB",
     borderRadius: 6,
-    marginRight: 10,
+    marginRight: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF",
   },
-
   checkboxChecked: {
-    backgroundColor: "#10B981",
-    borderColor: "#10B981",
+    backgroundColor: "#37a346",
+    borderColor: "#37a346",
   },
-
-  check: {
+  checkMark: {
     color: "#FFF",
+    fontSize: 12,
     fontWeight: "bold",
-    fontSize: 14,
   },
-
   checkboxLabel: {
     fontSize: 14,
-    color: "#000000",
-    fontWeight: "500",
+    color: "#4B5563",
   },
-
-  buttonContainer: {
-    marginTop: 5,
+  footer: {
+    paddingBottom: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
     alignItems: "center",
   },
-
-  despesa: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    color: "#000000",
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    width: "100%",
-    height: 44,
+  pickerItem: {
     fontSize: 14,
+    color: "#1F2937",
   },
 });

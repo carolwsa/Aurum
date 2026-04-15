@@ -182,24 +182,35 @@ export const getExpensesByMonth = async (month: string) => {
       description: "Lanche do IF",
       amount: 12.5,
       date: "2026-04-09",
+      type: "despesa",
     },
     {
       id: 2,
       description: "Gasolina",
       amount: 250,
       date: "2026-04-09",
+      type: "despesa",
     },
     {
       id: 3,
       description: "Compras farmácia",
       amount: 98.72,
       date: "2026-04-09",
+      type: "despesa",
     },
     {
       id: 4,
       description: "Almoço",
       amount: 45,
       date: "2026-04-10",
+      type: "despesa",
+    },
+    {
+      id: 5,
+      description: "Parcela Casa",
+      amount: 4166.67,
+      date: "2026-04-09",
+      type: "meta",
     },
   ];
 
@@ -223,5 +234,57 @@ export const createExpense = async (data: any) => {
       success: false,
       message: error.response?.data?.message || "Erro ao cadastrar despesa.",
     };
+  }
+};
+
+export const getAllExpenses = async () => {
+  try {
+    const mockData = [
+      {
+        id: 1,
+        description: "Parcela Casa",
+        amount: 4166.67,
+        date: "2026-01-09",
+        type: "meta",
+      },
+      {
+        id: 2,
+        description: "Gasolina",
+        amount: 250,
+        date: "2026-02-09",
+        type: "despesa",
+      },
+      {
+        id: 3,
+        description: "Compras farmácia",
+        amount: 98.72,
+        date: "2026-03-09",
+        type: "despesa",
+      },
+      {
+        id: 4,
+        description: "Almoço",
+        amount: 45,
+        date: "2026-04-10",
+        type: "despesa",
+      },
+      {
+        id: 5,
+        description: "Parcela Casa",
+        amount: 41.67,
+        date: "2026-02-09",
+        type: "meta",
+      },
+    ];
+    // Na API real, você faria algo como: axios.get('/expenses?year=2026')
+    // const response = await fetch("SUA_URL_DA_API/expenses");
+    // const data = await response.json();
+
+    return {
+      success: true,
+      data: mockData, // Espera-se um array de objetos
+    };
+  } catch (error) {
+    return { success: false, data: [] };
   }
 };

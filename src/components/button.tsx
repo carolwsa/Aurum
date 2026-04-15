@@ -9,9 +9,19 @@ type ButtonProps = TouchableOpacityProps & {
   label: string;
 };
 
-export const Button = ({ label, ...rest }: ButtonProps) => {
+export const Button = ({ id, label, ...rest }: ButtonProps) => {
   return (
-    <TouchableOpacity style={styles.container} activeOpacity={0.6} {...rest}>
+    <TouchableOpacity
+      style={
+        id == "cancel"
+          ? styles.cancelBtn
+          : id == "save"
+            ? styles.saveBtn
+            : styles.container
+      }
+      activeOpacity={0.6}
+      {...rest}
+    >
       <Text style={styles.text}>{label}</Text>
     </TouchableOpacity>
   );
@@ -31,5 +41,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  cancelBtn: {
+    width: "45%",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 50,
+    marginVertical: 16,
+    backgroundColor: "#c44646",
+  },
+  saveBtn: {
+    width: "45%",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 50,
+    marginVertical: 16,
+    backgroundColor: "#2a9a75",
   },
 });

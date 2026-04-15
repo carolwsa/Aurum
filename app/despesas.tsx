@@ -150,16 +150,12 @@ export default function Despesas() {
             <Modal
               visible={visible}
               transparent
-              animationType="fade"
+              animationType="slide"
               onRequestClose={() => setVisible(false)}
             >
               <View style={styles.overlay}>
-                <CadastroDespesa />
+                <CadastroDespesa onClose={() => setVisible(false)} />
               </View>
-
-              <TouchableOpacity onPress={() => setVisible(false)}>
-                <Text style={styles.closeButton}>X</Text>
-              </TouchableOpacity>
             </Modal>
           </ScrollView>
         </LinearGradient>
@@ -276,10 +272,8 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.4)", // Um pouco mais claro para não esconder totalmente o fundo
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
-  closeButton: {},
 });
