@@ -19,9 +19,9 @@ export const SideMenu = ({
 
   const menuItems = [
     { label: "Home", route: "/home" },
+    { label: "Metas", route: "/metas" },
     { label: "Despesas", route: "/despesas" },
     { label: "Relatório", route: "/relatorio" },
-    { label: "Metas", route: "/metas" },
     { label: "Configurações", route: "/perfil" },
   ];
 
@@ -52,10 +52,22 @@ export const SideMenu = ({
             {menuItems.map((item) => (
               <Pressable
                 key={item.route}
-                style={styles.menuItem}
+                style={({ hovered, pressed }: any) => [
+                  styles.menuItem,
+                  (hovered || pressed) && styles.menuItemHovered,
+                ]}
                 onPress={() => handleNavigate(item.route)}
               >
-                <Text style={styles.menuItemText}>{item.label}</Text>
+                {({ hovered, pressed }: any) => (
+                  <Text
+                    style={[
+                      styles.menuItemText,
+                      (hovered || pressed) && styles.menuItemTextActive,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                )}
               </Pressable>
             ))}
           </ScrollView>
@@ -68,51 +80,80 @@ export const SideMenu = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+    // Invertemos para 'row-reverse' para que o menuContainer
+    // fique na esquerda e a transparentArea na direita
     flexDirection: "row",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(17, 24, 39, 0.7)", // Backdrop mais denso e profissional
   },
   transparentArea: {
     flex: 1,
   },
   menuContainer: {
     width: "75%",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#FFFFFF",
     height: "100%",
-    paddingTop: 40,
+    paddingTop: 60,
+    // Sombra sutil projetada para a direita
+    shadowColor: "#000",
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 10,
+    borderRightWidth: 1,
+    borderRightColor: "#F3F4F6",
   },
   menuHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    marginTop: 10,
+    paddingHorizontal: 28,
+    paddingBottom: 30,
+    // Removi a borda inferior para um visual mais limpo e contínuo
   },
   menuTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 22,
+    fontWeight: "300", // Mais fino = mais elegante
+    color: "#111827",
+    letterSpacing: 4, // Estilo "Luxury" para o nome AURUM
+    textTransform: "uppercase",
   },
   closeButton: {
-    fontSize: 16,
-    color: "#666",
-    fontWeight: "bold",
+    fontSize: 18,
+    color: "#9CA3AF",
+    fontWeight: "300",
   },
   menuContent: {
     flex: 1,
-    paddingTop: 10,
+    paddingTop: 20,
+    paddingHorizontal: 16,
   },
   menuItem: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingVertical: 25,
+    paddingHorizontal: 12,
+    marginBottom: 4,
+    borderRadius: 8,
+    borderLeftColor: "transparent",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderLeftWidth: 4,
+  },
+  menuItemActive: {
+    backgroundColor: "#F9FAFB",
+    borderLeftColor: "#D4AF37", // A LINHA DOURADA (Aurum)
   },
   menuItemText: {
-    fontSize: 18,
-    color: "#333",
-    fontWeight: "500",
+    fontSize: 19,
+    color: "#4B5563",
+    fontWeight: "400",
+    letterSpacing: 0.5,
+  },
+  menuItemTextActive: {
+    color: "#111827",
+    fontWeight: "600",
+  },
+  menuItemHovered: {
+    backgroundColor: "#F9FBFD", // Um azul/cinza bem clarinho
+    borderLeftColor: "#D4AF37", // A linha dourada Aurum
   },
 });

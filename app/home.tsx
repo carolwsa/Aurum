@@ -165,12 +165,9 @@ const styles = StyleSheet.create({
     padding: 1,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
     flex: 1,
     width: "100%",
     marginTop: -28,
-    zIndex: 1,
   },
 
   container: {
@@ -181,9 +178,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#eeee",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    justifyContent: "flex-start",
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    minHeight: "100%",
   },
 
   chartContainer: {

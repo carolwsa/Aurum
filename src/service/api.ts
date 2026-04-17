@@ -264,7 +264,7 @@ export const getAllExpenses = async () => {
       {
         id: 4,
         description: "Almoço",
-        amount: 45,
+        amount: 545,
         date: "2026-04-10",
         type: "despesa",
       },

@@ -22,7 +22,9 @@ export const Button = ({ id, label, ...rest }: ButtonProps) => {
       activeOpacity={0.6}
       {...rest}
     >
-      <Text style={styles.text}>{label}</Text>
+      <Text style={id == "cancel" ? styles.cancelTxt : styles.text}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -49,7 +51,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 50,
     marginVertical: 16,
-    backgroundColor: "#c44646",
+  },
+  cancelTxt: {
+    color: "#6B7280",
+    fontWeight: "600",
+    fontSize: 18,
   },
   saveBtn: {
     width: "45%",
@@ -58,6 +64,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 50,
     marginVertical: 16,
-    backgroundColor: "#2a9a75",
+    backgroundColor: "#f28f09",
   },
 });

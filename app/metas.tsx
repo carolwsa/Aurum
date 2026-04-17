@@ -83,7 +83,7 @@ export default function Metas() {
   }, [valoresPagosPorMes]);
 
   return (
-    <View>
+    <View style={{ flex: 1, backgroundColor: "#FFF" }}>
       <Header headerTxt={"Metas"} onMenuPress={() => setMenuOpen(true)} />
       <SideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
@@ -248,12 +248,9 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
     flex: 1,
     width: "100%",
     marginTop: -28,
-    zIndex: 1,
   },
 
   container: {
@@ -265,34 +262,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     justifyContent: "flex-start",
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    minHeight: "100%",
   },
 
-  chartContainer: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-
-  chartCard: {
-    width: "100%",
-    backgroundColor: "#ffffff",
-    padding: 20,
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 5,
-    marginTop: 20,
-    alignItems: "center",
-  },
-  chartTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 8,
-    textAlign: "center",
-  },
   card: {
     backgroundColor: "#ffffffed",
     padding: 20,
@@ -378,28 +350,32 @@ const styles = StyleSheet.create({
   modalContent: {
     width: "85%",
     backgroundColor: "#FFF",
-    borderRadius: 20,
-    padding: 20,
-    elevation: 10,
+    borderRadius: 25,
+    padding: 25,
+    elevation: 20,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#1F2937",
+    marginBottom: 30,
     textAlign: "center",
   },
   inputLabel: {
     fontSize: 14,
     color: "#6B7280",
+    fontWeight: "600",
     marginBottom: 5,
   },
   input: {
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
+    backgroundColor: "#F3F4F6",
     borderRadius: 10,
     padding: 12,
-    marginBottom: 15,
+    marginBottom: 20,
+    fontSize: 16,
+    color: "#374151",
+    borderWidth: 0,
+    width: "95%",
   },
   modalButtons: {
     flexDirection: "row",
