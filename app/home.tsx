@@ -1,11 +1,22 @@
 import { Button } from "@/src/components/button";
 import { Header } from "@/src/components/header";
 import { SideMenu } from "@/src/components/sidemenu";
-import { getDailyExpenses, getRecentExpenses } from "@/src/service/api";
+import {
+  getDespesasDoMesAtual,
+  getDespesasParaGrafico,
+  getUltimas5Despesas,
+} from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { LineChart } from "react-native-chart-kit";
 
 interface ExpenseData {
@@ -15,43 +26,63 @@ interface ExpenseData {
 
 interface RecentExpense {
   id: string;
-  description: string;
-  amount: number;
+  titulo: string;
+  valor: number;
 }
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [expenses, setExpenses] = useState<ExpenseData[]>([]);
   const [recentExpenses, setRecentExpenses] = useState<RecentExpense[]>([]);
+  const [chartExpenses, setChartExpenses] = useState<ExpenseData[]>([]);
+  const [totalMes, setTotalMes] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const hasChartData = chartExpenses.length > 0;
+  const hasRecentExpenses = recentExpenses.length > 0;
+
   useEffect(() => {
-    const fetchExpenses = async () => {
-      const result = await getDailyExpenses();
-      if (result.success) {
-        setExpenses(result.data);
+    const fetchData = async () => {
+      setLoading(true);
+
+      const mesResult = await getDespesasDoMesAtual();
+      if (mesResult.success) {
+        setTotalMes(mesResult.totalGasto);
       }
 
-      const recentResult = await getRecentExpenses();
-      if (recentResult.success) {
-        setRecentExpenses(recentResult.data);
+      const chartResult = await getDespesasParaGrafico();
+      if (chartResult.success) {
+        setChartExpenses(chartResult.data);
+      }
+
+      const lastResult = await getUltimas5Despesas();
+      if (lastResult.success) {
+        setRecentExpenses(lastResult.despesas);
       }
 
       setLoading(false);
     };
-    fetchExpenses();
+
+    fetchData();
   }, []);
 
   const processData = () => {
+    if (chartExpenses.length === 0) {
+      return { labels: [], datasets: [{ data: [] }] };
+    }
+
     const labels: string[] = [];
     const data: number[] = [];
-    expenses.forEach((expense) => {
+
+    chartExpenses.forEach((expense) => {
       const date = new Date(expense.date);
-      date.setDate(date.getDate() + 1); // Ajuste de 1 dia para corrigir o deslocamento
-      const dayName = date.toLocaleDateString("pt-BR", { weekday: "short" });
+      const dayName = date.toLocaleDateString("pt-BR", {
+        weekday: "short",
+      });
+
       labels.push(dayName);
       data.push(expense.amount);
     });
+
     return { labels, datasets: [{ data }] };
   };
 
@@ -59,7 +90,7 @@ export default function Home() {
 
   const handleDespesas = () => {
     // setMenuOpen(false);
-    // Navegar para a tela de despesas (ex.: router.push('/despesas'))
+
     router.push("/despesas");
   };
 
@@ -94,10 +125,40 @@ export default function Home() {
                   color: "#1F2937",
                 }}
               >
-                R$ 1.250,00
+                R$ {totalMes.toFixed(2).replace(".", ",")}
               </Text>
             </View>
-            {!loading && (
+
+            <View>
+              {loading && <ActivityIndicator size="small" color="#f28f09" />}
+            </View>
+
+            {!loading && !hasChartData && !hasRecentExpenses && (
+              <View style={styles.card}>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "700",
+                    color: "#1F2937",
+                    textAlign: "center",
+                    marginBottom: 8,
+                  }}
+                >
+                  Bem-vindo ao Aurum!
+                </Text>
+
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: "#6B7280",
+                    textAlign: "center",
+                  }}
+                >
+                  Você ainda não possui despesas cadastradas.
+                </Text>
+              </View>
+            )}
+            {!loading && hasChartData && (
               <View style={styles.chartCard}>
                 <Text style={styles.chartTitle}>Gastos dos últimos dias</Text>
 
@@ -130,21 +191,26 @@ export default function Home() {
                 />
               </View>
             )}
-            <View style={styles.card2}>
-              <Text style={styles.chartTitle}>Confira seus últimos gastos</Text>
 
-              {recentExpenses.map((expense) => (
-                <View key={expense.id} style={styles.expenseItem}>
-                  <Text style={styles.expenseDescription}>
-                    {expense.description}
-                  </Text>
+            {!loading && hasRecentExpenses && (
+              <View style={styles.card2}>
+                <Text style={styles.chartTitle}>
+                  Confira seus últimos gastos
+                </Text>
 
-                  <Text style={styles.expenseValue}>
-                    R$ {expense.amount.toFixed(2)}
-                  </Text>
-                </View>
-              ))}
-            </View>
+                {recentExpenses.map((expense) => (
+                  <View key={expense.id} style={styles.expenseItem}>
+                    <Text style={styles.expenseDescription}>
+                      {expense.titulo}
+                    </Text>
+
+                    <Text style={styles.expenseValue}>
+                      R$ {expense.valor.toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
             <Button label="Nova Despesa" onPress={handleDespesas}></Button>
           </ScrollView>
         </LinearGradient>
@@ -217,6 +283,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 6,
     marginTop: 20,
+    marginBottom: 20,
   },
 
   card2: {

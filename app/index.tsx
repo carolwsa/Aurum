@@ -1,8 +1,10 @@
+import { Feedback } from "@/src/components/feedback";
 import { useAuth } from "@/src/context/auth";
+import { login } from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Button } from "../src/components/button";
 import { Input } from "../src/components/input";
 import { Texto } from "../src/components/text";
@@ -10,30 +12,50 @@ import { Texto } from "../src/components/text";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, checkAuth } = useAuth();
   const router = useRouter();
+
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
+
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Erro", "Preencha todos os campos.");
+      setFeedback({
+        type: "error",
+        message: "Preencha todos os campos.",
+      });
+
       return;
     }
 
-    console.log("Login solicitado com:", { email, password });
+    setLoading(true);
+    setFeedback(null);
 
-    // setLoading(true);
-    // const result = await login(email, password);
-    // setLoading(false);
+    const result = await login(email, password);
 
-    // if (result.success) {
-    //   Alert.alert("Sucesso", result.message);
-    //   // Navegue para a tela principal (ex.: router.push('/dashboard'))
-    // } else {
-    //   Alert.alert("Erro", result.message);
-    // }
+    if (result.success) {
+      setFeedback({
+        type: "success",
+        message: "Login realizado com sucesso!",
+      });
 
-    router.push("/home");
+      await checkAuth();
+      setLoading(false);
+
+      router.replace("/home");
+    } else {
+      setLoading(false);
+
+      setFeedback({
+        type: "error",
+        message: "E-mail ou senha incorretos.",
+      });
+      return;
+    }
   };
 
   return (
@@ -54,7 +76,19 @@ export default function Login() {
             />
           </View>
 
-          <Button label={"Entrar"} onPress={handleLogin} disabled={loading} />
+          {/* <View style={styles.loading}>
+            {loading && <ActivityIndicator size="small" color="#f28f09" />}
+          </View> */}
+          <Button
+            label={loading ? "Entrando..." : "Entrar"}
+            onPress={handleLogin}
+            disabled={loading}
+          ></Button>
+
+          {feedback && (
+            <Feedback type={feedback.type} message={feedback.message} />
+          )}
+
           <View style={styles.container_buttons}>
             <Texto id={"2"} textContent="Não possui conta?" />
             <Text
@@ -107,5 +141,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "80%",
     gap: 10,
+  },
+  loading: {
+    marginTop: 20,
   },
 });

@@ -1,8 +1,10 @@
+import { Feedback } from "@/src/components/feedback";
 import { useAuth } from "@/src/context/auth";
+import { login, register } from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Button } from "../src/components/button";
 import { Input } from "../src/components/input";
 import { Texto } from "../src/components/text";
@@ -12,41 +14,74 @@ export default function Cadastro() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [nome, setNome] = useState("");
+
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
-  const { isLoggedIn, user } = useAuth();
+
+  const { isLoggedIn, user, checkAuth } = useAuth();
 
   const handleCadastro = async () => {
-    if (!email || !password) {
-      Alert.alert("Erro", "Preencha todos os campos.");
+    if (!nome || !email || !password || !confirmPassword) {
+      setFeedback({
+        type: "error",
+        message: "Preencha todos os campos.",
+      });
+
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert("Erro", "A senha deve conter pelo menos 6 caracteres.");
+    if (password.length < 10) {
+      setFeedback({
+        type: "error",
+        message: "A senha deve possuir no mínimo 10 caracteres.",
+      });
+
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Erro", "As senhas não coincidem.");
+      setFeedback({
+        type: "error",
+        message: "As senhas não coincidem.",
+      });
       return;
     }
 
-    console.log("Cadastro realizado com sucesso:", {
-      nome,
-      email,
-      confirmPassword,
-    });
+    setLoading(true);
 
-    // setLoading(true);
-    // const result = await login(email, password);
-    // setLoading(false);
+    const cadastro = await register(nome, email, password);
+    if (!cadastro.success) {
+      setLoading(false);
+      setFeedback({
+        type: "error",
+        message: "Erro no cadastro.",
+      });
+      console.log(cadastro.message);
+      return;
+    }
 
-    // if (result.success) {
-    //   Alert.alert("Sucesso", result.message);
-    //   // Navegue para a tela principal (ex.: router.push('/dashboard'))
-    // } else {
-    //   Alert.alert("Erro", result.message);
-    // }
+    const loginResult = await login(email, password);
+
+    if (loginResult.success) {
+      setFeedback({
+        type: "success",
+        message: "Cadastro realizado com sucesso!",
+      });
+
+      await checkAuth();
+      setLoading(false);
+
+      router.push("/home");
+    } else {
+      setFeedback({
+        type: "error",
+        message: "Erro ao recuperar as informações.",
+      });
+      console.log(loginResult.message);
+    }
   };
 
   return (
@@ -74,7 +109,16 @@ export default function Cadastro() {
             />
           </View>
 
-          <Button label={"Cadastrar"} onPress={handleCadastro} />
+          <Button
+            label={loading ? "Carregando..." : "Entrar"}
+            onPress={handleCadastro}
+            disabled={loading}
+          />
+
+          {feedback && (
+            <Feedback type={feedback.type} message={feedback.message} />
+          )}
+
           <View style={styles.container_buttons}>
             <Texto id={"2"} textContent="Já possui conta?" />
             <Text

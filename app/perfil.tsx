@@ -1,7 +1,11 @@
 import { Button } from "@/src/components/button";
+import { Feedback } from "@/src/components/feedback";
 import { Header } from "@/src/components/header";
 import { SideMenu } from "@/src/components/sidemenu";
+import { useAuth } from "@/src/context/auth";
+import { removeAuthToken, updateUser } from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
@@ -18,35 +22,103 @@ import {
 export default function Perfil() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // Estados para os dados do usuário (inicialmente vazios ou mockados)
-  const [usuario, setUsuario] = useState({
-    nome: "Ana Carolina",
-    email: "ana.silva@gmail.com",
-  });
-
-  // Estado temporário para a modal (evita salvar sem confirmar)
+  const { checkAuth, user } = useAuth();
   const [tempNome, setTempNome] = useState("");
   const [tempEmail, setTempEmail] = useState("");
 
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | "info" | "null";
+    message: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const handleOpenEdit = () => {
-    setTempNome(usuario.nome);
-    setTempEmail(usuario.email);
+    if (!user) return;
+    setFeedback({
+      type: "null",
+      message: " ",
+    });
+
+    setTempNome(user?.nome);
+    setTempEmail(user?.email);
     setModalVisible(true);
   };
 
-  const handleSave = () => {
-    // Aqui fazer o await api.put('/user', { nome: tempNome, email: tempEmail })
-    setUsuario({ nome: tempNome, email: tempEmail });
-    setModalVisible(false);
-    Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
+  const handleSave = async () => {
+    if (!tempNome || !tempEmail) {
+      setFeedback({
+        type: "error",
+        message: "Preencha todos os campos.",
+      });
+      return;
+    }
+
+    if (!user) return;
+
+    setLoading(true);
+
+    try {
+      const result = await updateUser(user.id, {
+        nome: tempNome,
+        email: tempEmail,
+      });
+
+      if (result.success) {
+        setFeedback({
+          type: "success",
+          message: "Perfil atualizado sucesso!",
+        });
+
+        await checkAuth();
+        setLoading(false);
+        setModalVisible(false);
+      } else {
+        setFeedback({
+          type: "error",
+          message: "Erro",
+        });
+        console.log(result.message);
+      }
+    } catch {
+      setFeedback({
+        type: "error",
+        message: "Não foi possível atualizar o perfil.",
+      });
+      setLoading(false);
+    }
   };
 
-  const handleLogout = () => {
-    Alert.alert("Sair", "Deseja realmente sair da conta?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sair", onPress: () => console.log("Logout realizado") }, // Aqui lógica de limpar token/redirecionar
-    ]);
+  const handleLogout = async () => {
+    setMenuOpen(false);
+
+    setTimeout(() => {
+      Alert.alert(
+        "Sair",
+        "Deseja realmente sair da conta?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Sair",
+            style: "destructive",
+            onPress: async () => {
+              await removeAuthToken();
+              await checkAuth();
+              router.replace("/");
+            },
+          },
+        ],
+        { cancelable: true },
+      );
+    }, 100);
+
+    console.log("LOGOUT DISPARADO");
+    try {
+      await removeAuthToken();
+      await checkAuth();
+      router.replace("/");
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível sair da conta.");
+    }
   };
 
   return (
@@ -62,6 +134,7 @@ export default function Perfil() {
           <ScrollView
             contentContainerStyle={styles.container}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             <View style={styles.profileHeader}>
               <View style={styles.imageContainer}>
@@ -70,8 +143,8 @@ export default function Perfil() {
                   style={styles.iconImage}
                 />
               </View>
-              <Text style={styles.userName}>{usuario.nome}</Text>
-              <Text style={styles.userEmail}>{usuario.email}</Text>
+              <Text style={styles.userName}>{user?.nome}</Text>
+              <Text style={styles.userEmail}>{user?.email}</Text>
             </View>
 
             <View style={styles.actionCard}>
@@ -117,6 +190,9 @@ export default function Perfil() {
               autoCapitalize="none"
               placeholder="Digite seu e-mail"
             />
+            {feedback && (
+              <Feedback type={feedback.type} message={feedback.message} />
+            )}
 
             <View style={styles.modalFooter}>
               <Button
@@ -124,7 +200,12 @@ export default function Perfil() {
                 id="cancel"
                 onPress={() => setModalVisible(false)}
               />
-              <Button label="Salvar" id="save" onPress={handleSave} />
+              <Button
+                label={loading ? "Salvando..." : "Salvar"}
+                id="save"
+                onPress={handleSave}
+                disabled={loading}
+              />
             </View>
           </View>
         </View>

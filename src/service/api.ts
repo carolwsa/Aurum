@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
 // 1. Configuração base da API
-const API_BASE_URL = "http://localhost:3000/api"; // URL da sua API futura (ajuste quando pronta, ex.: 'https://minhaapi.com/api')
+const API_BASE_URL = "http://localhost:3333"; // URL da sua API futura (ajuste quando pronta, ex.: 'https://minhaapi.com/api')
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -42,12 +42,13 @@ export const removeAuthToken = async () => {
 
 // 4. Funções para os endpoints da API (preparadas para quando a API estiver pronta)
 // Exemplo: Login
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, senha: string) => {
   try {
-    const response = await api.post("/auth/login", { email, password });
-    const { token, user } = response.data; // Supondo que a API retorne token e dados do usuário
+    const response = await api.post("/login", { email, senha });
+    const { token, usuario } = response.data; // Supondo que a API retorne token e dados do usuário
     await setAuthToken(token); // Salva o token
-    return { success: true, user, message: "Login realizado com sucesso!" };
+    await setUserId(usuario.id);
+    return { success: true, usuario, message: "Login realizado com sucesso!" };
   } catch (error: any) {
     return {
       success: false,
@@ -57,17 +58,16 @@ export const login = async (email: string, password: string) => {
 };
 
 // Exemplo: Cadastro
-export const register = async (
-  name: string,
-  email: string,
-  password: string,
-) => {
+export const register = async (nome: string, email: string, senha: string) => {
   try {
-    const response = await api.post("/auth/register", {
-      name,
+    const response = await api.post("/usuarios", {
+      nome,
       email,
-      password,
+      senha,
     });
+    const { token, usuario } = response.data;
+    await setAuthToken(token);
+    await setUserId(usuario.id);
     return { success: true, message: "Cadastro realizado com sucesso!" };
   } catch (error: any) {
     return {
@@ -91,124 +91,156 @@ export const logout = async () => {
   }
 };
 
-// Exemplo: Obter dados do usuário logado
+export const setUserId = async (userId: string) => {
+  await AsyncStorage.setItem("userId", userId);
+};
+
+export const getUserId = async (): Promise<string | null> => {
+  return await AsyncStorage.getItem("userId");
+};
+
 export const getCurrentUser = async () => {
+  console.log("AUTH HEADER:", api.defaults.headers.common["Authorization"]);
   try {
-    const response = await api.get("/auth/me"); // Rota para obter usuário atual
-    return { success: true, user: response.data.user };
+    const userId = await getUserId();
+
+    if (!userId) {
+      return { success: false, message: "Usuário não identificado." };
+    }
+
+    const response = await api.get(`/usuarios/${userId}`);
+
+    return {
+      success: true,
+      user: response.data,
+    };
   } catch (error: any) {
-    return { success: false, message: "Erro ao obter usuário." };
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao obter usuário.",
+    };
   }
 };
 
-// 5. Função para verificar se o usuário está autenticado
-export const isAuthenticated = async (): Promise<boolean> => {
-  const token = await getAuthToken();
-  return !!token; // Retorna true se houver token
+export const updateUser = async (
+  id: string,
+  data: { nome?: string; email?: string },
+) => {
+  try {
+    const response = await api.put(`/usuarios/${id}`, data);
+
+    return {
+      success: true,
+      user: response.data.usuario,
+      message: response.data.mensagem,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao atualizar usuário.",
+    };
+  }
 };
 
-// Exemplo: Obter gastos diários dos últimos 5 dias
-export const getDailyExpenses = async () => {
-  const mockData = [
-    { date: "2026-04-06", amount: 200 },
-    { date: "2026-04-07", amount: 150 },
-    { date: "2026-04-08", amount: 300 },
-    { date: "2026-04-09", amount: 250 },
-    { date: "2026-04-10", amount: 100 },
-  ];
-  return { success: true, data: mockData };
+export const getDespesasDoMesAtual = async () => {
+  try {
+    const response = await api.get("/despesas/do-mes-atual");
 
-  // try {
-  //   const response = await api.get("/expenses/daily"); // Rota para obter gastos diários
-  //   return { success: true, data: response.data }; // Supondo que retorne array de {date: 'YYYY-MM-DD', amount: number}
-  // } catch (error: any) {
-  //   return { success: false, message: "Erro ao obter gastos diários." };
-  // }
+    return {
+      success: true,
+      mes: response.data.mes,
+      totalGasto: response.data.totalGasto,
+      despesas: response.data.despesas,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao buscar despesas do mês.",
+    };
+  }
 };
 
-// Exemplo: Obter últimos 5 gastos do usuário
-export const getRecentExpenses = async () => {
-  const mockData = [
-    {
-      id: "1",
-      description: "Supermercado",
-      amount: 180.5,
-      date: "2026-04-10",
-    },
-    {
-      id: "2",
-      description: "Combustível",
-      amount: 120,
-      date: "2026-04-09",
-    },
-    {
-      id: "3",
-      description: "Restaurante",
-      amount: 75.9,
-      date: "2026-04-08",
-    },
-    {
-      id: "4",
-      description: "Farmácia",
-      amount: 45.3,
-      date: "2026-04-07",
-    },
-    {
-      id: "5",
-      description: "Internet",
-      amount: 99.9,
-      date: "2026-04-06",
-    },
-  ];
+export const getUltimas5Despesas = async () => {
+  try {
+    const response = await api.get("/despesas/ultimas-5/mes-atual");
 
-  return { success: true, data: mockData };
+    return {
+      success: true,
+      despesas: response.data.despesas,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao buscar últimas despesas.",
+    };
+  }
+};
 
-  // IMPLEMENTAÇÃO REAL FUTURA
-  // try {
-  //   const response = await api.get("/expenses/recent?limit=5");
-  //   return { success: true, data: response.data };
-  // } catch (error: any) {
-  //   return {
-  //     success: false,
-  //     message: "Erro ao buscar gastos recentes.",
-  //   };
-  // }
+export const getDespesasParaGrafico = async () => {
+  try {
+    const response = await api.get("/despesas/do-mes-atual");
+
+    const despesas = response.data.despesas;
+
+    // Agrupa por dia
+    const map: Record<string, number> = {};
+
+    despesas.forEach((d: any) => {
+      const date = new Date(d.data).toISOString().slice(0, 10);
+      map[date] = (map[date] || 0) + Number(d.valor);
+    });
+
+    const formatted = Object.entries(map).map(([date, amount]) => ({
+      date,
+      amount,
+    }));
+
+    return {
+      success: true,
+      data: formatted,
+    };
+  } catch {
+    return {
+      success: false,
+      data: [],
+    };
+  }
 };
 
 export const getExpensesByMonth = async (month: string) => {
   const mockData = [
     {
-      id: 1,
-      description: "Lanche do IF",
-      amount: 12.5,
+      id: "1",
+      titulo: "Lanche do IF",
+      valor: 12.5,
       date: "2026-04-09",
       type: "despesa",
     },
     {
-      id: 2,
-      description: "Gasolina",
-      amount: 250,
+      id: "2",
+      titulo: "Gasolina",
+      valor: 250,
       date: "2026-04-09",
       type: "despesa",
     },
     {
-      id: 3,
-      description: "Compras farmácia",
-      amount: 98.72,
+      id: "3",
+      titulo: "Compras farmácia",
+      valor: 98.72,
       date: "2026-04-09",
       type: "despesa",
     },
     {
-      id: 4,
-      description: "Almoço",
-      amount: 45,
+      id: "4",
+      titulo: "Almoço",
+      valor: 45,
       date: "2026-04-10",
       type: "despesa",
     },
     {
-      id: 5,
-      description: "Parcela Casa",
-      amount: 4166.67,
+      id: "5",
+      titulo: "Parcela Casa",
+      valor: 4166.67,
       date: "2026-04-09",
       type: "meta",
     },
@@ -220,9 +252,41 @@ export const getExpensesByMonth = async (month: string) => {
   };
 };
 
+export const updateExpense = async (
+  id: string,
+  data: {
+    titulo?: string;
+    valor?: number;
+    data?: string;
+    categoria?: string;
+  },
+) => {
+  try {
+    const response = await api.put(`/despesas/${id}`, data);
+    return { success: true, despesa: response.data };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao atualizar despesa.",
+    };
+  }
+};
+
+export const deleteExpense = async (id: string) => {
+  try {
+    await api.delete(`/despesas/${id}`);
+    return { success: true };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao excluir despesa.",
+    };
+  }
+};
+
 export const createExpense = async (data: any) => {
   try {
-    const response = await api.post("/expenses", data);
+    const response = await api.post("/despesas", data);
 
     return {
       success: true,
@@ -288,3 +352,5 @@ export const getAllExpenses = async () => {
     return { success: false, data: [] };
   }
 };
+
+export default api;

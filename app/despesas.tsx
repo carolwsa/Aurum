@@ -1,6 +1,7 @@
+import { Button } from "@/src/components/button";
 import { Header } from "@/src/components/header";
 import { SideMenu } from "@/src/components/sidemenu";
-import { getExpensesByMonth } from "@/src/service/api";
+import { deleteExpense, getExpensesByMonth } from "@/src/service/api";
 import { format } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useState } from "react";
@@ -17,9 +18,9 @@ import { Calendar } from "react-native-calendars";
 import { CadastroDespesa } from "./cadastroDespesa";
 
 interface Expense {
-  id: number;
-  description: string;
-  amount: number;
+  id: string;
+  titulo: string;
+  valor: number;
   date: string;
 }
 
@@ -33,6 +34,9 @@ export default function Despesas() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [editExpense, setEditExpense] = useState<Expense | null>(null);
+
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
   useEffect(() => {
     loadExpenses();
@@ -53,7 +57,7 @@ export default function Despesas() {
   }, [expenses, selectedDate]);
 
   const totalOfDay = useMemo(() => {
-    return expensesOfDay.reduce((acc, item) => acc + item.amount, 0);
+    return expensesOfDay.reduce((acc, item) => acc + item.valor, 0);
   }, [expensesOfDay]);
 
   const markedDates = useMemo(() => {
@@ -118,18 +122,78 @@ export default function Despesas() {
                 data={expensesOfDay}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                  <View style={styles.item}>
-                    <Text style={styles.itemTitle}>{item.description}</Text>
+                  <TouchableOpacity
+                    onPress={() => setSelectedExpense(item)}
+                    style={styles.item}
+                  >
+                    <Text style={styles.itemTitle}>{item.titulo}</Text>
                     <Text style={styles.itemValue}>
-                      R$ {item.amount.toFixed(2).replace(".", ",")}
+                      R$ {item.valor.toFixed(2).replace(".", ",")}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 )}
                 ListEmptyComponent={
                   <Text style={styles.empty}>Nenhuma despesa neste dia</Text>
                 }
               />
             )}
+
+            <Modal
+              visible={!!selectedExpense}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setSelectedExpense(null)}
+            >
+              <View style={styles.overlay}>
+                <View style={styles.actionModal}>
+                  <Text style={styles.actionTitle}>O que deseja fazer?</Text>
+
+                  <Button
+                    label="Editar despesa"
+                    onPress={() => {
+                      setEditExpense(selectedExpense);
+                      setSelectedExpense(null);
+                    }}
+                  />
+
+                  <Button
+                    label="Excluir despesa"
+                    id="danger"
+                    onPress={async () => {
+                      if (!selectedExpense) return;
+
+                      const result = await deleteExpense(
+                        String(selectedExpense.id),
+                      );
+
+                      if (result.success) {
+                        setSelectedExpense(null);
+                        loadExpenses();
+                      }
+                    }}
+                  />
+
+                  <Button
+                    label="Cancelar"
+                    id="cancel"
+                    onPress={() => setSelectedExpense(null)}
+                  />
+                  <Modal
+                    visible={!!editExpense}
+                    transparent
+                    animationType="slide"
+                  >
+                    <View style={styles.overlay}>
+                      <CadastroDespesa
+                        despesa={editExpense}
+                        onClose={() => setEditExpense(null)}
+                        onSaved={loadExpenses}
+                      />
+                    </View>
+                  </Modal>
+                </View>
+              </View>
+            </Modal>
 
             <View style={styles.footer}>
               <TouchableOpacity
@@ -272,8 +336,21 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)", // Um pouco mais claro para não esconder totalmente o fundo
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  actionModal: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    width: "90%",
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 16,
+    textAlign: "center",
   },
 });

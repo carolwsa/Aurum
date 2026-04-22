@@ -1,9 +1,10 @@
 import { Button } from "@/src/components/button";
+import { Feedback } from "@/src/components/feedback";
 import { Input } from "@/src/components/input";
-import { createExpense } from "@/src/service/api";
+import { createExpense, updateExpense } from "@/src/service/api";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -15,9 +16,14 @@ import {
 
 interface CadastroDespesaProps {
   onClose: () => void;
+  despesa?: any;
+  onSaved?: () => void;
 }
-
-export const CadastroDespesa = ({ onClose }: CadastroDespesaProps) => {
+export const CadastroDespesa = ({
+  onClose,
+  despesa,
+  onSaved,
+}: CadastroDespesaProps) => {
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [categoria, setCategoria] = useState("alimentacao");
@@ -26,6 +32,20 @@ export const CadastroDespesa = ({ onClose }: CadastroDespesaProps) => {
   const [show, setShow] = useState(false);
   const [recorrente, setRecorrente] = useState(false);
 
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (despesa) {
+      setDescricao(despesa.titulo);
+      setValor(despesa.valor);
+      setCategoria(despesa.categoria || "alimentacao");
+      setDate(new Date(despesa.data));
+    }
+  }, [despesa]);
+
   function onChange(_: any, selectedDate?: Date) {
     setShow(Platform.OS === "ios");
     if (selectedDate) setDate(selectedDate);
@@ -33,46 +53,27 @@ export const CadastroDespesa = ({ onClose }: CadastroDespesaProps) => {
 
   async function handleSalvar() {
     if (!descricao || !valor || !date) {
-      alert("Preencha todos os campos obrigatórios");
+      setFeedback({
+        type: "error",
+        message: "Preencha todos os campos.",
+      });
       return;
     }
-    const mesesNomes = [
-      "Janeiro",
-      "Fevereiro",
-      "Março",
-      "Abril",
-      "Maio",
-      "Junho",
-      "Julho",
-      "Agosto",
-      "Setembro",
-      "Outubro",
-      "Novembro",
-      "Dezembro",
-    ];
-    const mesDaDespesa = mesesNomes[date.getMonth()];
 
     const payload = {
-      description: descricao,
-      amount: Number(valor),
-      category: categoria,
-      type: tipo,
-      date: date.toISOString(),
-      monthName: mesDaDespesa,
-      recurring: recorrente,
+      titulo: descricao,
+      valor: Number(valor),
+      categoria,
+      data: date.toISOString().slice(0, 10),
     };
 
-    const response = await createExpense(payload);
+    const response = despesa
+      ? await updateExpense(despesa.id, payload) // PUT
+      : await createExpense(payload); // POST
 
     if (response.success) {
-      alert("Sucesso!");
-      if (tipo === "meta") {
-        console.log(`Automação: Mês de ${mesDaDespesa} marcado como pago.`);
-      }
-
+      onSaved?.();
       onClose();
-    } else {
-      alert(response.message);
     }
   }
 
@@ -205,10 +206,14 @@ export const CadastroDespesa = ({ onClose }: CadastroDespesaProps) => {
             onChange={onChange}
           />
         )}
+
+        {feedback && (
+          <Feedback type={feedback.type} message={feedback.message} />
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label="Salvar Despesa" onPress={handleSalvar} />
+        <Button label="Salvar" onPress={handleSalvar} />
       </View>
     </View>
   );
