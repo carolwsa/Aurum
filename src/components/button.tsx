@@ -17,12 +17,22 @@ export const Button = ({ id, label, ...rest }: ButtonProps) => {
           ? styles.cancelBtn
           : id == "save"
             ? styles.saveBtn
-            : styles.container
+            : id == "danger"
+              ? styles.dangerBtn
+              : styles.container
       }
       activeOpacity={0.6}
       {...rest}
     >
-      <Text style={id == "cancel" ? styles.cancelTxt : styles.text}>
+      <Text
+        style={
+          id == "cancel"
+            ? styles.cancelTxt
+            : id == "danger"
+              ? styles.dangerTxt
+              : styles.text
+        }
+      >
         {label}
       </Text>
     </TouchableOpacity>
@@ -37,7 +47,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 50,
-    marginTop: 30,
+    marginTop: 20,
   },
   text: {
     color: "#fff",
@@ -65,5 +75,18 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginVertical: 16,
     backgroundColor: "#f28f09",
+  },
+  dangerBtn: {
+    width: "45%",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 50,
+    marginVertical: 10,
+  },
+  dangerTxt: {
+    color: "#ff0202",
+    fontWeight: "600",
+    fontSize: 18,
   },
 });

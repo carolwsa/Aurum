@@ -25,6 +25,15 @@ api.interceptors.response.use(
   },
 );
 
+interface Expense {
+  id: string;
+  titulo: string;
+  valor: number;
+  data: string;
+  categoria?: string | null;
+  tipo?: "despesa" | "meta";
+}
+
 // 3. Funções para gerenciar tokens (importante para autenticação)
 export const setAuthToken = async (token: string) => {
   await AsyncStorage.setItem("authToken", token);
@@ -208,48 +217,21 @@ export const getDespesasParaGrafico = async () => {
 };
 
 export const getExpensesByMonth = async (month: string) => {
-  const mockData = [
-    {
-      id: "1",
-      titulo: "Lanche do IF",
-      valor: 12.5,
-      date: "2026-04-09",
-      type: "despesa",
-    },
-    {
-      id: "2",
-      titulo: "Gasolina",
-      valor: 250,
-      date: "2026-04-09",
-      type: "despesa",
-    },
-    {
-      id: "3",
-      titulo: "Compras farmácia",
-      valor: 98.72,
-      date: "2026-04-09",
-      type: "despesa",
-    },
-    {
-      id: "4",
-      titulo: "Almoço",
-      valor: 45,
-      date: "2026-04-10",
-      type: "despesa",
-    },
-    {
-      id: "5",
-      titulo: "Parcela Casa",
-      valor: 4166.67,
-      date: "2026-04-09",
-      type: "meta",
-    },
-  ];
+  try {
+    const response = await api.get("/despesas/do-mes-atual");
 
-  return {
-    success: true,
-    data: mockData,
-  };
+    return {
+      success: true,
+      data: response.data.despesas as Expense[],
+      totalGasto: response.data.totalGasto,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      data: [],
+      message: error.response?.data?.erro || "Erro ao buscar despesas do mês",
+    };
+  }
 };
 
 export const updateExpense = async (
@@ -284,72 +266,45 @@ export const deleteExpense = async (id: string) => {
   }
 };
 
-export const createExpense = async (data: any) => {
+export const createExpense = async (data: {
+  titulo: string;
+  valor: number;
+  data: string;
+  categoria?: string;
+}) => {
   try {
     const response = await api.post("/despesas", data);
 
     return {
       success: true,
-      data: response.data,
-      message: "Despesa cadastrada com sucesso!",
+      despesa: response.data,
     };
   } catch (error: any) {
     return {
       success: false,
-      message: error.response?.data?.message || "Erro ao cadastrar despesa.",
+      message: error.response?.data?.erro || "Erro ao cadastrar despesa.",
     };
   }
 };
-
-export const getAllExpenses = async () => {
+export const getRelatorioMensal = async () => {
   try {
-    const mockData = [
-      {
-        id: 1,
-        description: "Parcela Casa",
-        amount: 4166.67,
-        date: "2026-01-09",
-        type: "meta",
-      },
-      {
-        id: 2,
-        description: "Gasolina",
-        amount: 250,
-        date: "2026-02-09",
-        type: "despesa",
-      },
-      {
-        id: 3,
-        description: "Compras farmácia",
-        amount: 98.72,
-        date: "2026-03-09",
-        type: "despesa",
-      },
-      {
-        id: 4,
-        description: "Almoço",
-        amount: 545,
-        date: "2026-04-10",
-        type: "despesa",
-      },
-      {
-        id: 5,
-        description: "Parcela Casa",
-        amount: 41.67,
-        date: "2026-02-09",
-        type: "meta",
-      },
-    ];
-    // Na API real, você faria algo como: axios.get('/expenses?year=2026')
-    // const response = await fetch("SUA_URL_DA_API/expenses");
-    // const data = await response.json();
+    const response = await api.get("/despesas/do-mes-atual");
 
     return {
       success: true,
-      data: mockData, // Espera-se um array de objetos
+      totalMes: Number(response.data.totalGasto),
+      despesas: response.data.despesas.map((d: any) => ({
+        ...d,
+        valor: Number(d.valor),
+      })),
     };
-  } catch (error) {
-    return { success: false, data: [] };
+  } catch (error: any) {
+    return {
+      success: false,
+      totalMes: 0,
+      despesas: [],
+      message: error.response?.data?.erro || "Erro ao carregar relatório",
+    };
   }
 };
 

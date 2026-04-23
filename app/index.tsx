@@ -46,7 +46,7 @@ export default function Login() {
       await checkAuth();
       setLoading(false);
 
-      router.replace("/home");
+      router.replace("./home");
     } else {
       setLoading(false);
 

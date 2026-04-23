@@ -1,11 +1,12 @@
 import { Button } from "@/src/components/button";
 import { Feedback } from "@/src/components/feedback";
 import { Input } from "@/src/components/input";
-import { createExpense, updateExpense } from "@/src/service/api";
+import { createExpense, deleteExpense, updateExpense } from "@/src/service/api";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -31,18 +32,41 @@ export const CadastroDespesa = ({
   const [date, setDate] = useState<Date | null>(null);
   const [show, setShow] = useState(false);
   const [recorrente, setRecorrente] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const isEditing = !!despesa;
 
   const [feedback, setFeedback] = useState<{
     type: "success" | "error" | "info";
     message: string;
   } | null>(null);
 
+  function isValidDate(d: any): d is Date {
+    return d instanceof Date && !isNaN(d.getTime());
+  }
+
   useEffect(() => {
     if (despesa) {
-      setDescricao(despesa.titulo);
-      setValor(despesa.valor);
-      setCategoria(despesa.categoria || "alimentacao");
-      setDate(new Date(despesa.data));
+      setDescricao(despesa.titulo ?? "");
+      setValor(
+        despesa.valor !== undefined && despesa.valor !== null
+          ? String(despesa.valor)
+          : "",
+      );
+
+      if (despesa.data) {
+        const parsed = new Date(despesa.data);
+        setDate(!isNaN(parsed.getTime()) ? parsed : null);
+      } else {
+        setDate(null);
+      }
+
+      setCategoria(despesa.categoria ?? "alimentacao");
+    } else {
+      setDescricao("");
+      setValor("");
+      setCategoria("alimentacao");
+      setDate(null);
     }
   }, [despesa]);
 
@@ -60,6 +84,17 @@ export const CadastroDespesa = ({
       return;
     }
 
+    if (!isValidDate(date)) {
+      setFeedback({
+        type: "error",
+        message: "Selecione uma data válida.",
+      });
+      return;
+    }
+
+    setSaving(true);
+    setFeedback(null);
+
     const payload = {
       titulo: descricao,
       valor: Number(valor),
@@ -68,19 +103,39 @@ export const CadastroDespesa = ({
     };
 
     const response = despesa
-      ? await updateExpense(despesa.id, payload) // PUT
-      : await createExpense(payload); // POST
+      ? await updateExpense(despesa.id, payload)
+      : await createExpense(payload);
+
+    setSaving(false);
 
     if (response.success) {
+      setFeedback({
+        type: "success",
+        message: despesa
+          ? "Despesa atualizada com sucesso!"
+          : "Despesa cadastrada com sucesso!",
+      });
+
       onSaved?.();
-      onClose();
+
+      setTimeout(() => {
+        onClose();
+      }, 1200);
+    } else {
+      setFeedback({
+        type: "error",
+        message: response.message || "Erro ao salvar despesa.",
+      });
     }
   }
-
   return (
     <View style={styles.modalCard}>
       <View style={styles.header}>
-        <Text style={styles.title}>Nova Despesa</Text>
+        {isEditing ? (
+          <Text style={styles.title}>Nova Despesa</Text>
+        ) : (
+          <Text style={styles.title}>Editar despesa</Text>
+        )}
         <TouchableOpacity onPress={onClose} style={styles.closeIconContainer}>
           <Text style={styles.closeIcon}>✕</Text>
         </TouchableOpacity>
@@ -206,14 +261,61 @@ export const CadastroDespesa = ({
             onChange={onChange}
           />
         )}
-
-        {feedback && (
-          <Feedback type={feedback.type} message={feedback.message} />
-        )}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label="Salvar" onPress={handleSalvar} />
+        {feedback && (
+          <Feedback type={feedback.type} message={feedback.message} />
+        )}
+        <Button
+          label={saving ? "Salvando..." : "Salvar"}
+          onPress={handleSalvar}
+          disabled={saving}
+        />
+        {isEditing && (
+          <Button
+            label="Excluir Despesa"
+            id="danger"
+            onPress={() => {
+              Alert.alert(
+                "Confirmar exclusão",
+                "Deseja realmente excluir esta despesa?",
+                [
+                  {
+                    text: "Cancelar",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Excluir",
+                    style: "destructive",
+                    onPress: async () => {
+                      if (!despesa) return;
+
+                      const result = await deleteExpense(despesa.id);
+
+                      if (result.success) {
+                        setFeedback({
+                          type: "success",
+                          message: "Despesa removida com sucesso.",
+                        });
+                        onSaved?.();
+
+                        setTimeout(() => {
+                          onClose();
+                        }, 1200);
+                      } else {
+                        setFeedback({
+                          type: "error",
+                          message: "Não foi possível ecluir a despesa",
+                        });
+                      }
+                    },
+                  },
+                ],
+              );
+            }}
+          />
+        )}
       </View>
     </View>
   );

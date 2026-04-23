@@ -2,7 +2,7 @@ import { Button } from "@/src/components/button";
 import { Header } from "@/src/components/header";
 import { Input } from "@/src/components/input";
 import { SideMenu } from "@/src/components/sidemenu";
-import { getAllExpenses } from "@/src/service/api";
+import { getRelatorioMensal } from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -47,7 +47,7 @@ export default function Metas() {
 
   useEffect(() => {
     async function sincronizarDados() {
-      const response = await getAllExpenses();
+      const response = await getRelatorioMensal;
 
       if (response.success) {
         const lancamentosMeta = response.data.filter(

@@ -1,7 +1,7 @@
-import { Button } from "@/src/components/button";
 import { Header } from "@/src/components/header";
 import { SideMenu } from "@/src/components/sidemenu";
-import { deleteExpense, getExpensesByMonth } from "@/src/service/api";
+import { useAuth } from "@/src/context/auth";
+import { getExpensesByMonth } from "@/src/service/api";
 import { format } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useState } from "react";
@@ -21,7 +21,9 @@ interface Expense {
   id: string;
   titulo: string;
   valor: number;
-  date: string;
+  data: string;
+  categoria?: string | null;
+  tipo?: "despesa" | "meta";
 }
 
 export default function Despesas() {
@@ -36,35 +38,46 @@ export default function Despesas() {
   const [visible, setVisible] = useState(false);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
 
+  const { checkAuth } = useAuth();
+
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
   useEffect(() => {
-    loadExpenses();
+    const init = async () => {
+      await checkAuth(); // ✅ aplica token no axios
+      await loadExpenses(); // ✅ agora sim faz requests
+    };
+
+    init();
   }, [currentMonth]);
 
   async function loadExpenses() {
     setLoading(true);
 
     const response = await getExpensesByMonth(currentMonth);
+
     if (response.success) {
       setExpenses(response.data);
+    } else {
+      setExpenses([]);
     }
+
     setLoading(false);
   }
 
   const expensesOfDay = useMemo(() => {
-    return expenses.filter((exp) => exp.date === selectedDate);
+    return expenses.filter((exp) => exp.data.startsWith(selectedDate));
   }, [expenses, selectedDate]);
 
   const totalOfDay = useMemo(() => {
-    return expensesOfDay.reduce((acc, item) => acc + item.valor, 0);
+    return expensesOfDay.reduce((acc, item) => acc + Number(item.valor), 0);
   }, [expensesOfDay]);
 
   const markedDates = useMemo(() => {
     const marks: any = {};
 
     expenses.forEach((expense) => {
-      marks[expense.date] = { marked: true };
+      marks[expense.data] = { marked: true };
     });
 
     marks[selectedDate] = {
@@ -123,12 +136,13 @@ export default function Despesas() {
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    onPress={() => setSelectedExpense(item)}
+                    onPress={() => setEditExpense(item)}
                     style={styles.item}
                   >
                     <Text style={styles.itemTitle}>{item.titulo}</Text>
+
                     <Text style={styles.itemValue}>
-                      R$ {item.valor.toFixed(2).replace(".", ",")}
+                      R$ {Number(item.valor).toFixed(2).replace(".", ",")}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -139,62 +153,25 @@ export default function Despesas() {
             )}
 
             <Modal
-              visible={!!selectedExpense}
+              visible={visible || !!editExpense}
               transparent
-              animationType="fade"
-              onRequestClose={() => setSelectedExpense(null)}
+              animationType="slide"
+              onRequestClose={() => {
+                setVisible(false);
+                setEditExpense(null);
+              }}
             >
               <View style={styles.overlay}>
-                <View style={styles.actionModal}>
-                  <Text style={styles.actionTitle}>O que deseja fazer?</Text>
-
-                  <Button
-                    label="Editar despesa"
-                    onPress={() => {
-                      setEditExpense(selectedExpense);
-                      setSelectedExpense(null);
-                    }}
-                  />
-
-                  <Button
-                    label="Excluir despesa"
-                    id="danger"
-                    onPress={async () => {
-                      if (!selectedExpense) return;
-
-                      const result = await deleteExpense(
-                        String(selectedExpense.id),
-                      );
-
-                      if (result.success) {
-                        setSelectedExpense(null);
-                        loadExpenses();
-                      }
-                    }}
-                  />
-
-                  <Button
-                    label="Cancelar"
-                    id="cancel"
-                    onPress={() => setSelectedExpense(null)}
-                  />
-                  <Modal
-                    visible={!!editExpense}
-                    transparent
-                    animationType="slide"
-                  >
-                    <View style={styles.overlay}>
-                      <CadastroDespesa
-                        despesa={editExpense}
-                        onClose={() => setEditExpense(null)}
-                        onSaved={loadExpenses}
-                      />
-                    </View>
-                  </Modal>
-                </View>
+                <CadastroDespesa
+                  despesa={editExpense}
+                  onClose={() => {
+                    setVisible(false);
+                    setEditExpense(null);
+                  }}
+                  onSaved={loadExpenses}
+                />
               </View>
             </Modal>
-
             <View style={styles.footer}>
               <TouchableOpacity
                 style={styles.addButton}
@@ -206,7 +183,7 @@ export default function Despesas() {
               <View style={styles.totalBox}>
                 <Text style={styles.totalLabel}>Total do dia:</Text>
                 <Text style={styles.totalValue}>
-                  R$ {totalOfDay.toFixed(2).replace(".", ",")}
+                  R$ {Number(totalOfDay).toFixed(2).replace(".", ",")}
                 </Text>
               </View>
             </View>

@@ -43,23 +43,33 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      try {
+        const mesResult = await getDespesasDoMesAtual();
+        if (mesResult.success) {
+          setTotalMes(Number(mesResult.totalGasto));
+        }
 
-      const mesResult = await getDespesasDoMesAtual();
-      if (mesResult.success) {
-        setTotalMes(mesResult.totalGasto);
+        const chartResult = await getDespesasParaGrafico();
+        if (chartResult.success) {
+          setChartExpenses(chartResult.data);
+        }
+
+        const lastResult = await getUltimas5Despesas();
+        if (lastResult.success) {
+          const normalized = lastResult.despesas.map((e: any) => ({
+            ...e,
+            valor: Number(e.valor),
+          }));
+          setRecentExpenses(normalized);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados da Home:", error);
+        setRecentExpenses([]);
+        setChartExpenses([]);
+        setTotalMes(0);
+      } finally {
+        setLoading(false);
       }
-
-      const chartResult = await getDespesasParaGrafico();
-      if (chartResult.success) {
-        setChartExpenses(chartResult.data);
-      }
-
-      const lastResult = await getUltimas5Despesas();
-      if (lastResult.success) {
-        setRecentExpenses(lastResult.despesas);
-      }
-
-      setLoading(false);
     };
 
     fetchData();
@@ -70,17 +80,21 @@ export default function Home() {
       return { labels: [], datasets: [{ data: [] }] };
     }
 
+    const sorted = [...chartExpenses].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+
     const labels: string[] = [];
     const data: number[] = [];
 
-    chartExpenses.forEach((expense) => {
+    sorted.forEach((expense) => {
       const date = new Date(expense.date);
       const dayName = date.toLocaleDateString("pt-BR", {
         weekday: "short",
       });
 
       labels.push(dayName);
-      data.push(expense.amount);
+      data.push(Number(expense.amount));
     });
 
     return { labels, datasets: [{ data }] };
@@ -205,7 +219,7 @@ export default function Home() {
                     </Text>
 
                     <Text style={styles.expenseValue}>
-                      R$ {expense.valor.toFixed(2)}
+                      R$ {Number(expense.valor).toFixed(2).replace(".", ",")}
                     </Text>
                   </View>
                 ))}

@@ -128,7 +128,7 @@ export default function Cadastro() {
                 fontWeight: "bold",
               }}
             >
-              <Link href="/">Login</Link>
+              <Link href="./">Login</Link>
             </Text>
           </View>
         </View>

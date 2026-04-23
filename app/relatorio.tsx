@@ -1,6 +1,6 @@
 import { Header } from "@/src/components/header";
 import { SideMenu } from "@/src/components/sidemenu";
-import { getAllExpenses } from "@/src/service/api";
+import { getRelatorioMensal } from "@/src/service/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useState } from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -11,22 +11,28 @@ const screenWidth = Dimensions.get("window").width;
 export default function Relatorio() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dadosApi, setDadosApi] = useState<any[]>([]);
+  const [despesas, setDespesas] = useState<any[]>([]);
+  const [totalMes, setTotalMes] = useState(0);
 
-  const categoriasFixas = [
-    "Alimentação",
-    "Habitação",
-    "Transporte",
-    "Saúde",
-    "Lazer",
-  ];
+  const mapaCategorias: Record<string, string> = {
+    alimentacao: "Alimentação",
+    habitacao: "Habitação",
+    transporte: "Transporte",
+    saude: "Saúde",
+    lazer: "Lazer",
+  };
+  ``;
 
   useEffect(() => {
     async function carregarDados() {
-      const response = await getAllExpenses();
-      if (response.success) {
-        setDadosApi(response.data);
+      const result = await getRelatorioMensal();
+
+      if (result.success) {
+        setDespesas(result.despesas);
+        setTotalMes(result.totalMes);
       }
     }
+
     carregarDados();
   }, []);
 
@@ -36,57 +42,65 @@ export default function Relatorio() {
   const anoAtual = dataAtual.getFullYear();
   const chartWidth = Math.max(screenWidth - 80, 280);
 
-  // Processamento dos Dados
   const stats = useMemo(() => {
-    const hoje = new Date();
-    let totalMes = 0;
     let totalAno = 0;
 
-    const gastosPorCategoria: { [key: string]: number } = {
-      Alimentação: 800,
-      Habitação: 1000,
-      Transporte: 500,
-      Saúde: 170,
-      Lazer: 1200,
+    const hoje = new Date();
+
+    const gastosPorCategoria: Record<string, number> = {
+      Alimentação: 0,
+      Habitação: 0,
+      Transporte: 0,
+      Saúde: 0,
+      Lazer: 0,
     };
 
-    dadosApi.forEach((item) => {
-      const dataItem = new Date(item.date);
-      const valor = Number(item.amount);
+    despesas.forEach((item) => {
+      const dataItem = new Date(item.data);
+      const valor = Number(item.valor);
 
       if (dataItem.getUTCFullYear() === hoje.getUTCFullYear()) {
         totalAno += valor;
-        if (dataItem.getUTCMonth() === hoje.getUTCMonth()) {
-          totalMes += valor;
-          if (gastosPorCategoria.hasOwnProperty(item.category)) {
-            gastosPorCategoria[item.category] += valor;
-          }
+
+        const categoriaFormatada = mapaCategorias[item.categoria];
+
+        if (categoriaFormatada) {
+          gastosPorCategoria[categoriaFormatada] += valor;
         }
       }
     });
 
-    const coresCategorias: Record<string, string> = {
-      Alimentação: "#aabed6", // laranja pastel claro
-      Habitação: "#f28f09", // laranja nude
-      Transporte: "#c0c3c7", // amarelo suave
-      Saúde: "#f49241", // amarelo âmbar claro
-      Lazer: "#8793a2d8",
-    };
+    const categoriasOrdenadas = [
+      "Alimentação",
+      "Habitação",
+      "Transporte",
+      "Saúde",
+      "Lazer",
+    ];
 
-    // Formatação para a biblioteca: labels (X) e datasets (Y)
+    const valores = categoriasOrdenadas.map((cat) => gastosPorCategoria[cat]);
+
     const chartData = {
-      labels: ["Alim.", "Hab.", "Transp.", "Saúde", "Lazer"], // Abreviei para caber melhor na tela
-
+      labels: ["Alim.", "Hab.", "Transp.", "Saúde", "Lazer"],
       datasets: [
         {
-          data: categoriasFixas.map((cat) => gastosPorCategoria[cat]),
-          colors: categoriasFixas.map((cat) => () => coresCategorias[cat]),
+          data: Object.values(gastosPorCategoria),
+
+          colors: categoriasOrdenadas.map((cat) => () => coresCategorias[cat]),
         },
       ],
     };
 
     return { totalMes, totalAno, chartData };
-  }, [dadosApi]);
+  }, [despesas, totalMes]);
+
+  const coresCategorias: Record<string, string> = {
+    Alimentação: "#aabed6", // laranja pastel claro
+    Habitação: "#f28f09", // laranja nude
+    Transporte: "#c0c3c7", // amarelo suave
+    Saúde: "#f49241", // amarelo âmbar claro
+    Lazer: "#8793a2d8",
+  };
 
   // Configuração de estilo do gráfico
   const chartConfig = {
