@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance } from "axios";
 
 // 1. Configuração base da API
-const API_BASE_URL = "http://localhost:3333"; // URL da sua API futura (ajuste quando pronta, ex.: 'https://minhaapi.com/api')
+const API_BASE_URL = "http://192.168.0.18:3333"; // URL da sua API futura (ajuste quando pronta, ex.: 'https://minhaapi.com/api')
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -12,18 +12,15 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// 2. Interceptores (opcional, mas útil para autenticação automática)
-// Intercepta todas as respostas para verificar erros globais
-api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expirado: redirecionar para login ou renovar token
-      console.log("Token expirado, faça logout ou renove o token");
-    }
-    return Promise.reject(error);
-  },
-);
+api.interceptors.request.use(async (config) => {
+  const token = await AsyncStorage.getItem("authToken");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 
 interface Expense {
   id: string;
@@ -304,6 +301,112 @@ export const getRelatorioMensal = async () => {
       totalMes: 0,
       despesas: [],
       message: error.response?.data?.erro || "Erro ao carregar relatório",
+    };
+  }
+};
+
+export const getMetas = async () => {
+  try {
+    const response = await api.get("/metas");
+
+    return {
+      success: true,
+      data: response.data.map((m: any) => ({
+        ...m,
+        valor: Number(m.valor),
+        valorAcumulado: Number(m.valorAcumulado),
+      })),
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      data: [],
+      message: error.response?.data?.erro || "Erro ao buscar metas",
+    };
+  }
+};
+
+export const getHistoricoMeta = async (metaId: string) => {
+  try {
+    const response = await api.get(`/metas/${metaId}/historico`);
+
+    return {
+      success: true,
+      meta: response.data.meta,
+      historicoMensal: response.data.historicoMensal,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      historicoMensal: [],
+      message: error.response?.data?.erro || "Erro ao buscar histórico da meta",
+    };
+  }
+};
+
+export const createMeta = async (data: {
+  titulo: string;
+  valor: number;
+  dataInicio: string;
+  dataFinal: string;
+}) => {
+  try {
+    const response = await api.post("/metas", {
+      titulo: data.titulo,
+      valor: data.valor,
+      dataInicio: data.dataInicio,
+      dataFinal: data.dataFinal,
+    });
+
+    return {
+      success: true,
+      meta: response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao criar meta.",
+    };
+  }
+};
+
+export const updateMeta = async (
+  id: string,
+  data: {
+    titulo?: string;
+    valor?: number;
+    dataInicio?: string;
+    dataFinal?: string;
+  },
+) => {
+  try {
+    const response = await api.put(`/metas/${id}`, data);
+    return { success: true, meta: response.data };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao atualizar meta",
+    };
+  }
+};
+
+export const adicionarValorAcumulado = async (
+  metaId: string,
+  valor: number,
+) => {
+  try {
+    const response = await api.post(`/metas/${metaId}/adicionar-valor`, {
+      valor,
+    });
+
+    return {
+      success: true,
+      meta: response.data,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.response?.data?.erro || "Erro ao adicionar valor à meta.",
     };
   }
 };
